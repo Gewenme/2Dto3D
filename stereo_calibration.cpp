@@ -103,7 +103,7 @@ bool calibrateStereoCamera(const std::string& leftCornerDataPath,
         cv::stereoRectify(leftCameraMatrix, leftDistCoeffs,
                          rightCameraMatrix, rightDistCoeffs,
                          imageSize, R, T, R1, R2, P1, P2, Q,
-                         cv::CALIB_ZERO_DISPARITY, -1, imageSize,
+                         cv::CALIB_ZERO_DISPARITY, 0, imageSize,
                          &leftROI, &rightROI);
 
         // Save rectification data

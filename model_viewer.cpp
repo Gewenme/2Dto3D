@@ -122,8 +122,15 @@ bool displayModel(const std::vector<cv::Point3f>& points,
         int imageSize = 800;
         cv::Mat image = cv::Mat::zeros(imageSize, imageSize, CV_8UC3);
 
-        float scaleX = imageSize / (maxPoint.x - minPoint.x);
-        float scaleZ = imageSize / (maxPoint.z - minPoint.z);
+        // Compute scale with safety checks for division by zero
+        float rangeX = maxPoint.x - minPoint.x;
+        float rangeZ = maxPoint.z - minPoint.z;
+        
+        if (rangeX <= 0) rangeX = 1.0f;  // Prevent division by zero
+        if (rangeZ <= 0) rangeZ = 1.0f;  // Prevent division by zero
+        
+        float scaleX = imageSize / rangeX;
+        float scaleZ = imageSize / rangeZ;
         float scale = std::min(scaleX, scaleZ) * 0.9f;  // Leave some margin
 
         // Project points to XZ plane (top-down view)
@@ -171,8 +178,14 @@ bool generateProjectionViews(const std::vector<cv::Point3f>& points,
 
         // Generate XY view (front view)
         cv::Mat xyView = cv::Mat::zeros(imageSize, imageSize, CV_8UC3);
-        float scaleX = imageSize / (maxPoint.x - minPoint.x);
-        float scaleY = imageSize / (maxPoint.y - minPoint.y);
+        float rangeX = maxPoint.x - minPoint.x;
+        float rangeY = maxPoint.y - minPoint.y;
+        
+        if (rangeX <= 0) rangeX = 1.0f;  // Prevent division by zero
+        if (rangeY <= 0) rangeY = 1.0f;  // Prevent division by zero
+        
+        float scaleX = imageSize / rangeX;
+        float scaleY = imageSize / rangeY;
         float xyScale = std::min(scaleX, scaleY) * 0.9f;
 
         for (size_t i = 0; i < points.size(); i++) {
@@ -187,7 +200,11 @@ bool generateProjectionViews(const std::vector<cv::Point3f>& points,
 
         // Generate XZ view (top view)
         cv::Mat xzView = cv::Mat::zeros(imageSize, imageSize, CV_8UC3);
-        float scaleZ = imageSize / (maxPoint.z - minPoint.z);
+        float rangeZ = maxPoint.z - minPoint.z;
+        
+        if (rangeZ <= 0) rangeZ = 1.0f;  // Prevent division by zero
+        
+        float scaleZ = imageSize / rangeZ;
         float xzScale = std::min(scaleX, scaleZ) * 0.9f;
 
         for (size_t i = 0; i < points.size(); i++) {
