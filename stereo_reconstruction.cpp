@@ -93,9 +93,11 @@ bool reconstruct3D(const std::string& leftImagePath,
 
         std::cout << "Generated point cloud with " << pointCloud.size() << " points" << std::endl;
 
-        // Filter point cloud
-        int remainingPoints = filterPointCloud(pointCloud, colors);
-        std::cout << "Filtered point cloud: " << remainingPoints << " points remaining" << std::endl;
+        // Temporarily disable filtering to show all points for debugging
+        std::cout << "Generated point cloud with " << pointCloud.size() << " points (no filtering applied)" << std::endl;
+        int remainingPoints = pointCloud.size(); // Skip filtering for now
+        //int remainingPoints = filterPointCloud(pointCloud, colors, 50.0f); // Increased from default 10.0f
+        std::cout << "Point cloud ready with " << remainingPoints << " points" << std::endl;
 
         // Save point cloud
         std::string outputFile;
@@ -139,7 +141,22 @@ bool computeDisparityMap(const cv::Mat& leftImage,
         cv::Ptr<cv::StereoMatcher> stereo;
         
         if (quality == HIGH_QUALITY) {
-            // Use StereoSGBM for higher quality
+            // Use StereoSGBM for higher quality with improved parameters
+            stereo = cv::StereoSGBM::create(
+                0,       // minDisparity
+                160,     // numDisparities (increased for better range)
+                3,       // blockSize (smaller for more detail)
+                864,     // P1 (8*channels*blockSize^2)
+                3456,    // P2 (32*channels*blockSize^2) 
+                5,       // disp12MaxDiff (reduced for stricter matching)
+                16,      // preFilterCap
+                5,       // uniquenessRatio (reduced for more unique matches)
+                50,      // speckleWindowSize (reduced to remove smaller noise)
+                1,       // speckleRange (reduced for stricter filtering)
+                cv::StereoSGBM::MODE_SGBM_3WAY  // Use 3-way mode for better quality
+            );
+        } else if (quality == MEDIUM_QUALITY) {
+            // Use StereoSGBM with medium quality parameters
             stereo = cv::StereoSGBM::create(
                 0,       // minDisparity
                 128,     // numDisparities
@@ -154,8 +171,13 @@ bool computeDisparityMap(const cv::Mat& leftImage,
             );
         } else {
             // Use StereoBM for faster processing
-            int blockSize = (quality == MEDIUM_QUALITY) ? 15 : 21;
-            stereo = cv::StereoBM::create(128, blockSize);
+            int blockSize = 21;
+            auto stereoBM = cv::StereoBM::create(64, blockSize);
+            stereoBM->setPreFilterCap(31);
+            stereoBM->setUniquenessRatio(15);
+            stereoBM->setSpeckleWindowSize(100);
+            stereoBM->setSpeckleRange(32);
+            stereo = stereoBM;
         }
 
         // Compute disparity
@@ -266,21 +288,61 @@ int filterPointCloud(std::vector<cv::Point3f>& pointCloud,
         std::vector<cv::Point3f> filteredPoints;
         std::vector<cv::Vec3b> filteredColors;
 
+        if (pointCloud.empty()) {
+            std::cout << "Point cloud is empty, nothing to filter" << std::endl;
+            return 0;
+        }
+
+        // Calculate mean depth for adaptive filtering
+        double meanZ = 0;
+        int validCount = 0;
+        double minZ = std::numeric_limits<double>::max();
+        double maxZ = std::numeric_limits<double>::lowest();
+        
+        for (const auto& point : pointCloud) {
+            if (point.z > 0 && point.z < maxDistance && std::isfinite(point.z)) {
+                meanZ += point.z;
+                validCount++;
+                minZ = std::min(minZ, (double)point.z);
+                maxZ = std::max(maxZ, (double)point.z);
+            }
+        }
+        
+        if (validCount == 0) {
+            std::cout << "No valid points found in initial filtering" << std::endl;
+            return 0;
+        }
+        
+        meanZ /= validCount;
+        std::cout << "Point cloud stats: " << pointCloud.size() << " total points, " 
+                  << validCount << " valid, Z range: " << minZ << " to " << maxZ 
+                  << ", mean Z: " << meanZ << std::endl;
+        
+        // Use more permissive thresholds
+        double zThresholdLow = std::max(0.1, minZ);
+        double zThresholdHigh = std::min((double)maxDistance, maxZ);
+        double xyThreshold = maxDistance; // Very permissive X,Y threshold
+
         for (size_t i = 0; i < pointCloud.size(); i++) {
             cv::Point3f& point = pointCloud[i];
-            float distance = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
             
-            // Filter by distance and reasonable Z values
-            if (distance < maxDistance && point.z > 0 && point.z < maxDistance && 
-                std::abs(point.x) < maxDistance && std::abs(point.y) < maxDistance) {
+            // Much more permissive filtering criteria
+            if (std::isfinite(point.x) && std::isfinite(point.y) && std::isfinite(point.z) &&
+                point.z > zThresholdLow && point.z < zThresholdHigh &&
+                std::abs(point.x) < xyThreshold && std::abs(point.y) < xyThreshold) {
                 filteredPoints.push_back(point);
-                filteredColors.push_back(colors[i]);
+                if (i < colors.size()) {
+                    filteredColors.push_back(colors[i]);
+                } else {
+                    filteredColors.push_back(cv::Vec3b(128, 128, 128)); // Default color
+                }
             }
         }
 
         pointCloud = filteredPoints;
         colors = filteredColors;
 
+        std::cout << "Filtering completed: " << filteredPoints.size() << " points kept" << std::endl;
         return static_cast<int>(pointCloud.size());
 
     } catch (const std::exception& e) {
