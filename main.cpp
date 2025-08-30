@@ -87,7 +87,7 @@ int main() {
 		"output/step3_biaoding/left_calibration",//左图像标定参数文件输出地址，不存在会自动创建，存在则存入
         9,
         6,
-        0.0082f,
+        0.025f, // Increased square size for better scale
         3264,
         2448,
         false,
@@ -108,7 +108,7 @@ int main() {
 		"output/step3_biaoding/right_calibration",//右图像标定参数文件输出地址，不存在会自动创建，存在则存入
         9,
         6,
-        0.0082f,
+        0.025f, // Increased square size for better scale
         3264,
         2448,
         false,
@@ -134,7 +134,7 @@ int main() {
         "output/step4_shuangmu_biaoding/stereo_calibration",//双目标定参数文件输出地址，不存在会自动创建，存在则存入
         9,
         6,
-        0.0082f,
+        0.025f, // Increased square size for better scale
         3264,
         2448
 	);
@@ -158,7 +158,7 @@ int main() {
         "output/step5_3D_reconstruction/3D_reconstruction",//三维重建结果输出地址，不存在会自动创建，存在则存入
 		0, //PLY格式
 		1, //高质量
-        0.0082f, //棋盘格的实际尺寸,单位为米
+        0.025f, //棋盘格的实际尺寸,单位为米 (25mm squares) (25mm squares)
         3264,// 图像宽度
 		2448// 图像高度
 	);
@@ -207,7 +207,7 @@ int main() {
             "output/step5_3D_reconstruction/3D_reconstruction_retry",
             0, //PLY格式
             2, //中等质量
-            0.0082f,
+            0.025f,
             3264,
             2448
         );

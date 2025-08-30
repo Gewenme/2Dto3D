@@ -93,11 +93,9 @@ bool reconstruct3D(const std::string& leftImagePath,
 
         std::cout << "Generated point cloud with " << pointCloud.size() << " points" << std::endl;
 
-        // Temporarily disable filtering to show all points for debugging
-        std::cout << "Generated point cloud with " << pointCloud.size() << " points (no filtering applied)" << std::endl;
-        int remainingPoints = pointCloud.size(); // Skip filtering for now
-        //int remainingPoints = filterPointCloud(pointCloud, colors, 50.0f); // Increased from default 10.0f
-        std::cout << "Point cloud ready with " << remainingPoints << " points" << std::endl;
+        // Apply improved filtering with better scale
+        int remainingPoints = filterPointCloud(pointCloud, colors, 10.0f); 
+        std::cout << "Filtered point cloud: " << remainingPoints << " points remaining" << std::endl;
 
         // Save point cloud
         std::string outputFile;
