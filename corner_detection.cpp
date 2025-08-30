@@ -52,15 +52,22 @@ bool detectAndDrawCorners(const std::string& inputFolder,
                         cv::Mat gray;
                         cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
 
-                        // Find chessboard corners
+                        // Apply Gaussian blur to reduce noise
+                        cv::Mat blurred;
+                        cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 1.0);
+
+                        // Find chessboard corners with improved flags for better accuracy
                         std::vector<cv::Point2f> corners;
-                        bool found = cv::findChessboardCorners(gray, boardSize, corners,
-                            cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK);
+                        bool found = cv::findChessboardCorners(blurred, boardSize, corners,
+                            cv::CALIB_CB_ADAPTIVE_THRESH | 
+                            cv::CALIB_CB_NORMALIZE_IMAGE | 
+                            cv::CALIB_CB_FILTER_QUADS |
+                            cv::CALIB_CB_FAST_CHECK);
 
                         if (found) {
-                            // Refine corner positions
-                            cv::cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1),
-                                cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
+                            // Refine corner positions with higher precision
+                            cv::cornerSubPix(blurred, corners, cv::Size(5, 5), cv::Size(-1, -1),
+                                cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 50, 0.01));
 
                             // Draw corners on image
                             cv::Mat imageWithCorners = image.clone();
@@ -137,13 +144,20 @@ bool detectCornersInImage(const std::string& imagePath,
         cv::Mat gray;
         cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
 
+        // Apply Gaussian blur to reduce noise
+        cv::Mat blurred;
+        cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 1.0);
+
         cv::Size boardSize(boardWidth, boardHeight);
-        bool found = cv::findChessboardCorners(gray, boardSize, corners,
-            cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK);
+        bool found = cv::findChessboardCorners(blurred, boardSize, corners,
+            cv::CALIB_CB_ADAPTIVE_THRESH | 
+            cv::CALIB_CB_NORMALIZE_IMAGE | 
+            cv::CALIB_CB_FILTER_QUADS |
+            cv::CALIB_CB_FAST_CHECK);
 
         if (found) {
-            cv::cornerSubPix(gray, corners, cv::Size(11, 11), cv::Size(-1, -1),
-                cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
+            cv::cornerSubPix(blurred, corners, cv::Size(5, 5), cv::Size(-1, -1),
+                cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 50, 0.01));
         }
 
         return found;

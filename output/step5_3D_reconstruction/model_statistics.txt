@@ -1,0 +1,10 @@
+3D Model Statistics
+===================
+Total points: 5070
+Bounding box:
+  Min: (-8.4015e-08, -1.00676e-07, -4.24454e-11)
+  Max: (-1.88096e-10, -2.04783e-10, -3.36868e-13)
+  Size: (8.38269e-08, 1.00471e-07, 4.21085e-11)
+Center: (-3.16292e-09, -2.72952e-09, -1.80423e-12)
+Average distance from center: 6.42273e-09
+Maximum distance from center: 1.21032e-07

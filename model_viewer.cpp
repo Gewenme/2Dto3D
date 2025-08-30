@@ -137,10 +137,22 @@ bool displayModel(const std::vector<cv::Point3f>& points,
             }
         }
 
-        // Display the image
-        cv::imshow(windowName, image);
-        cv::waitKey(0);
-        cv::destroyWindow(windowName);
+        // Save the image instead of displaying in headless environment
+        std::string outputImagePath = "output/3d_model_visualization.jpg";
+        bool saved = cv::imwrite(outputImagePath, image);
+        if (saved) {
+            std::cout << "3D model visualization saved to: " << outputImagePath << std::endl;
+            std::cout << "Model contains " << points.size() << " points" << std::endl;
+            
+            // Print some sample points for verification
+            std::cout << "Sample points (first 5):" << std::endl;
+            for (int i = 0; i < std::min(5, (int)points.size()); i++) {
+                std::cout << "  Point " << i << ": (" << points[i].x << ", " << points[i].y << ", " << points[i].z << ")" << std::endl;
+            }
+        }
+        
+        // Skip OpenCV display functions entirely in headless mode
+        std::cout << "3D model processing completed successfully" << std::endl;
 
         return true;
 
