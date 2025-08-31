@@ -3,6 +3,8 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <cmath>
+#include <cfloat>
 
 namespace StereoReconstruction {
 
@@ -93,8 +95,56 @@ bool reconstruct3D(const std::string& leftImagePath,
 
         std::cout << "Generated point cloud with " << pointCloud.size() << " points" << std::endl;
 
-        // Filter point cloud
-        int remainingPoints = filterPointCloud(pointCloud, colors);
+        // Debug: Print some sample points to understand the scale
+        if (!pointCloud.empty()) {
+            std::cout << "Sample points (first 5):" << std::endl;
+            for (size_t i = 0; i < std::min((size_t)5, pointCloud.size()); i++) {
+                std::cout << "  Point " << i << ": (" << pointCloud[i].x << ", " 
+                          << pointCloud[i].y << ", " << pointCloud[i].z << ")" << std::endl;
+            }
+            
+            // Auto-scale coordinates to a more reasonable range for visualization
+            // Find the range of coordinates
+            cv::Point3f minP(FLT_MAX, FLT_MAX, FLT_MAX);
+            cv::Point3f maxP(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+            
+            for (const auto& point : pointCloud) {
+                if (std::isfinite(point.x) && std::isfinite(point.y) && std::isfinite(point.z)) {
+                    minP.x = std::min(minP.x, point.x);
+                    minP.y = std::min(minP.y, point.y);
+                    minP.z = std::min(minP.z, point.z);
+                    maxP.x = std::max(maxP.x, point.x);
+                    maxP.y = std::max(maxP.y, point.y);
+                    maxP.z = std::max(maxP.z, point.z);
+                }
+            }
+            
+            float rangeX = maxP.x - minP.x;
+            float rangeY = maxP.y - minP.y;
+            float rangeZ = maxP.z - minP.z;
+            float maxRange = std::max({rangeX, rangeY, rangeZ});
+            
+            if (maxRange > 0 && maxRange < 1.0f) {  // If coordinates need scaling
+                float scaleFactor = 10.0f / maxRange;  // Scale to ~10 unit range
+                std::cout << "Scaling coordinates by factor: " << scaleFactor << std::endl;
+                std::cout << "Original range - X:" << rangeX << " Y:" << rangeY << " Z:" << rangeZ << std::endl;
+                
+                for (auto& point : pointCloud) {
+                    point.x *= scaleFactor;
+                    point.y *= scaleFactor;
+                    point.z *= scaleFactor;
+                }
+                
+                std::cout << "After scaling - Sample points (first 5):" << std::endl;
+                for (size_t i = 0; i < std::min((size_t)5, pointCloud.size()); i++) {
+                    std::cout << "  Point " << i << ": (" << pointCloud[i].x << ", " 
+                              << pointCloud[i].y << ", " << pointCloud[i].z << ")" << std::endl;
+                }
+            }
+        }
+
+        // Filter point cloud with more permissive parameters
+        int remainingPoints = filterPointCloud(pointCloud, colors, 10000.0f); // Very permissive
         std::cout << "Filtered point cloud: " << remainingPoints << " points remaining" << std::endl;
 
         // Save point cloud
@@ -270,11 +320,30 @@ int filterPointCloud(std::vector<cv::Point3f>& pointCloud,
             cv::Point3f& point = pointCloud[i];
             float distance = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
             
-            // Filter by distance and reasonable Z values
-            if (distance < maxDistance && point.z > 0 && point.z < maxDistance && 
-                std::abs(point.x) < maxDistance && std::abs(point.y) < maxDistance) {
+            // More permissive filtering for very small coordinates
+            // Check for valid (non-NaN, non-infinite) values
+            if (std::isfinite(point.x) && std::isfinite(point.y) && std::isfinite(point.z) &&
+                distance < maxDistance && 
+                std::abs(point.x) < maxDistance && 
+                std::abs(point.y) < maxDistance &&
+                std::abs(point.z) < maxDistance) {
                 filteredPoints.push_back(point);
                 filteredColors.push_back(colors[i]);
+            }
+        }
+
+        // If no points pass the filter, try with even more permissive settings
+        if (filteredPoints.empty() && !pointCloud.empty()) {
+            std::cout << "Warning: No points passed strict filtering, using more permissive filter..." << std::endl;
+            
+            for (size_t i = 0; i < std::min((size_t)10000, pointCloud.size()); i++) {
+                cv::Point3f& point = pointCloud[i];
+                
+                // Just check for finite values
+                if (std::isfinite(point.x) && std::isfinite(point.y) && std::isfinite(point.z)) {
+                    filteredPoints.push_back(point);
+                    filteredColors.push_back(colors[i]);
+                }
             }
         }
 

@@ -32,9 +32,20 @@ add_executable(example
     model_viewer.cpp
 )
 
+add_executable(demo
+    demo_main.cpp
+    image_resize.cpp
+    corner_detection.cpp
+    mono_calibration.cpp
+    stereo_calibration.cpp
+    stereo_reconstruction.cpp
+    model_viewer.cpp
+)
+
 # Link libraries
 target_link_libraries(2Dto3D ${OpenCV_LIBS})
 target_link_libraries(example ${OpenCV_LIBS})
+target_link_libraries(demo ${OpenCV_LIBS})
 
 # Set output directory
 set_target_properties(2Dto3D PROPERTIES
@@ -43,6 +54,9 @@ set_target_properties(2Dto3D PROPERTIES
 set_target_properties(example PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+set_target_properties(demo PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
 
 # Add install target
-install(TARGETS 2Dto3D example DESTINATION bin)
+install(TARGETS 2Dto3D example demo DESTINATION bin)
