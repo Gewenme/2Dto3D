@@ -19,15 +19,58 @@ cmake ..
 make
 ```
 
-2. **Run the example**:
+2. **Run the enhanced demo** (recommended):
+```bash
+./bin/demo
+```
+
+3. **Run the example**:
 ```bash
 ./bin/example
 ```
 
-3. **Or run the main program**:
+4. **Or run the main program**:
 ```bash
 ./bin/2Dto3D
 ```
+
+## Demo Programs
+
+### Enhanced Demo (`./bin/demo`)
+- Optimized parameters for better 3D reconstruction results
+- Automatic coordinate scaling for meaningful visualization
+- Comprehensive output analysis and validation
+- Robust error handling with progress reporting
+
+### Main Program (`./bin/2Dto3D`) 
+- Complete pipeline using relative paths
+- Full resolution processing with camera correction
+- Shows undistorted/corrected images
+- Generates detailed model statistics
+
+### Example Program (`./bin/example`)
+- Flexible demonstration with configurable paths
+- Educational example showing expected workflow
+- Graceful handling of missing input files
+
+## Output Analysis
+
+The enhanced pipeline generates:
+
+### Calibration & Correction
+- Camera calibration parameters (YML format)
+- Undistorted images showing correction effects
+- Stereo calibration and rectification data
+
+### 3D Reconstruction  
+- Point cloud in PLY format with color
+- Disparity maps visualizing depth information
+- Rectified stereo image pairs
+
+### Model Visualization
+- Multi-angle projection views (XY, XZ, YZ)
+- Coordinate range validation and scaling
+- Statistical analysis of 3D model quality
 
 ## Documentation
 

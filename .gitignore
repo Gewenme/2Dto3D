@@ -23,8 +23,10 @@ Makefile
 *.vcxproj
 *.vcxproj.filters
 
-# Example output
+# Output directories
 example/output/
+output/
+demo_output/
 
 # Temporary files
 *.tmp
