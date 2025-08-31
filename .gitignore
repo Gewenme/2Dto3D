@@ -16,6 +16,11 @@ Makefile
 *.dylib
 *.a
 
+# Generated calibration outputs (keep structure but ignore content)
+calibration_data/output/
+test_output/
+custom_test_output_*/
+
 # IDE files
 .vscode/
 .idea/
