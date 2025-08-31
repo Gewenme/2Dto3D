@@ -1,0 +1,85 @@
+# 2D到3D转换流程自动化实验配置文件
+# Automated 2D to 3D Conversion Experiment Configuration
+
+# 实验基本设置 / Basic Experiment Settings
+experiment:
+  name: "Stereo Vision 3D Reconstruction"
+  version: "1.0.0"
+  author: "2Dto3D Automation System"
+  
+# 输入输出路径配置 / Input/Output Path Configuration
+paths:
+  input:
+    left_images: "input/left"
+    right_images: "input/right"
+    scene_left: "input/scene/left"
+    scene_right: "input/scene/right"
+  
+  output:
+    base_dir: "experiment_results"
+    use_timestamp: true  # 创建带时间戳的输出文件夹
+    
+# 处理参数配置 / Processing Parameters
+processing:
+  # 图像预处理参数 / Image preprocessing parameters
+  image_resize:
+    target_width: 3264
+    target_height: 2448
+    interpolation: "LINEAR"  # LINEAR, CUBIC, NEAREST
+    
+  # 角点检测参数 / Corner detection parameters  
+  corner_detection:
+    board_width: 9    # 棋盘格内角点宽度
+    board_height: 6   # 棋盘格内角点高度
+    scale_factor: 1.0
+    
+  # 标定参数 / Calibration parameters
+  calibration:
+    square_size: 0.0082  # 棋盘格实际尺寸(米) / Actual chessboard square size in meters
+    save_undistorted: true
+    
+  # 三维重建参数 / 3D reconstruction parameters
+  reconstruction:
+    output_format: 0  # 0=PLY, 1=OBJ
+    quality_level: 3  # 1=低质量, 2=中等质量, 3=高质量
+    
+# 文档生成选项 / Documentation Generation Options
+documentation:
+  generate_markdown: true
+  generate_pdf: true
+  include_images: true
+  include_statistics: true
+  language: "zh_CN"  # zh_CN, en_US
+  
+  # 报告包含的部分 / Report sections to include
+  sections:
+    experiment_overview: true
+    processing_steps: true
+    parameter_details: true
+    quality_analysis: true
+    performance_metrics: true
+    visualization: true
+    troubleshooting: true
+    conclusions: true
+    
+# 可视化设置 / Visualization Settings
+visualization:
+  generate_comparison_images: true
+  generate_quality_charts: true
+  generate_3d_projections: true
+  chart_dpi: 300
+  image_format: "PNG"
+  
+# 质量评估阈值 / Quality Assessment Thresholds
+quality_thresholds:
+  max_reprojection_error: 1.0  # 最大重投影误差(像素)
+  min_detected_corners: 10     # 最少检测到的角点数
+  min_point_cloud_size: 1000   # 最小点云大小
+  max_processing_time: 300     # 最大处理时间(秒)
+  
+# 性能监控 / Performance Monitoring
+monitoring:
+  track_memory_usage: true
+  track_processing_time: true
+  track_file_sizes: true
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
