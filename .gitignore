@@ -26,6 +26,9 @@ Makefile
 # Example output
 example/output/
 
+# Demo output
+demo_8_2mm/output/
+
 # Temporary files
 *.tmp
 *.bak
