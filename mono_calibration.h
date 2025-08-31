@@ -69,6 +69,29 @@ namespace MonoCalibration {
                         cv::Mat& outputImage,
                         const cv::Mat& cameraMatrix,
                         const cv::Mat& distCoeffs);
+
+    /**
+     * Generate reprojection error visualization images
+     * @param cornerDataPath Path to corner data file
+     * @param imageFolderPath Path to folder containing calibration images
+     * @param outputPath Path to save residual error images
+     * @param cameraMatrix Camera matrix from calibration
+     * @param distCoeffs Distortion coefficients from calibration
+     * @param objectPoints 3D object points used in calibration
+     * @param imagePoints 2D image points used in calibration
+     * @param rvecs Rotation vectors from calibration
+     * @param tvecs Translation vectors from calibration
+     * @return true if successful
+     */
+    bool generateResidualImages(const std::string& cornerDataPath,
+                               const std::string& imageFolderPath,
+                               const std::string& outputPath,
+                               const cv::Mat& cameraMatrix,
+                               const cv::Mat& distCoeffs,
+                               const std::vector<std::vector<cv::Point3f>>& objectPoints,
+                               const std::vector<std::vector<cv::Point2f>>& imagePoints,
+                               const std::vector<cv::Mat>& rvecs,
+                               const std::vector<cv::Mat>& tvecs);
 }
 
 #endif // MONO_CALIBRATION_H
