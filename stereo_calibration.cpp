@@ -18,9 +18,9 @@ bool calibrateStereoCamera(const std::string& leftCornerDataPath,
         std::filesystem::create_directories(outputPath);
 
         // Load left corner data
-        cv::FileStorage leftFs(leftCornerDataPath + "/corners.yml", cv::FileStorage::READ);
+        cv::FileStorage leftFs(leftCornerDataPath + "/corner_data/corners.yml", cv::FileStorage::READ);
         if (!leftFs.isOpened()) {
-            std::cerr << "Failed to open left corner data: " << leftCornerDataPath + "/corners.yml" << std::endl;
+            std::cerr << "Failed to open left corner data: " << leftCornerDataPath + "/corner_data/corners.yml" << std::endl;
             return false;
         }
 
@@ -29,9 +29,9 @@ bool calibrateStereoCamera(const std::string& leftCornerDataPath,
         leftFs.release();
 
         // Load right corner data
-        cv::FileStorage rightFs(rightCornerDataPath + "/corners.yml", cv::FileStorage::READ);
+        cv::FileStorage rightFs(rightCornerDataPath + "/corner_data/corners.yml", cv::FileStorage::READ);
         if (!rightFs.isOpened()) {
-            std::cerr << "Failed to open right corner data: " << rightCornerDataPath + "/corners.yml" << std::endl;
+            std::cerr << "Failed to open right corner data: " << rightCornerDataPath + "/corner_data/corners.yml" << std::endl;
             return false;
         }
 

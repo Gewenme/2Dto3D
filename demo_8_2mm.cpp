@@ -32,13 +32,13 @@ int main() {
     const int boardWidth = 9;
     const int boardHeight = 6;
     const float squareSize = 0.0082f;  // 8.2mm squares - 关键参数
-    const int imageWidth = 640;
-    const int imageHeight = 480;
+    const int imageWidth = 3264;   // Updated to meet requirement: 3264×2448像素
+    const int imageHeight = 2448;  // Updated to meet requirement: 3264×2448像素
     
     std::cout << "配置参数 (Configuration):" << std::endl;
     std::cout << "- 棋盘格 (Chessboard): " << boardWidth << "x" << boardHeight << " 内角点" << std::endl;
     std::cout << "- 方格边长 (Square size): " << squareSize * 1000 << "mm" << std::endl;
-    std::cout << "- 图像尺寸 (Image size): " << imageWidth << "x" << imageHeight << std::endl;
+    std::cout << "- 图像尺寸 (Image size): " << imageWidth << "x" << imageHeight << " (要求:3264×2448像素)" << std::endl;
     std::cout << std::endl;
     
     std::cout << "1. 图像调整 (Image Resizing)..." << std::endl;

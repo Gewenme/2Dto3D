@@ -23,9 +23,9 @@ bool calibrateCamera(const std::string& cornerDataPath,
         }
 
         // Load corner data
-        cv::FileStorage fs(cornerDataPath + "/corners.yml", cv::FileStorage::READ);
+        cv::FileStorage fs(cornerDataPath + "/corner_data/corners.yml", cv::FileStorage::READ);
         if (!fs.isOpened()) {
-            std::cerr << "Failed to open corner data file: " << cornerDataPath + "/corners.yml" << std::endl;
+            std::cerr << "Failed to open corner data file: " << cornerDataPath + "/corner_data/corners.yml" << std::endl;
             return false;
         }
 
