@@ -11,7 +11,7 @@ find_package(OpenCV REQUIRED)
 # Include directories
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-# Add executables
+# Add executables using existing modular code
 add_executable(2Dto3D
     main.cpp
     image_resize.cpp
@@ -59,4 +59,5 @@ set_target_properties(demo_8_2mm PROPERTIES
 )
 
 # Add install target
-install(TARGETS 2Dto3D example demo_8_2mm DESTINATION bin)
+install(TARGETS 2Dto3D example demo_8_2mm 
+        DESTINATION bin)
