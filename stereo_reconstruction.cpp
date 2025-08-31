@@ -60,7 +60,7 @@ bool reconstruct3D(const std::string& leftImagePath,
 
         // Compute disparity map
         cv::Mat disparityMap;
-        if (!computeDisparityMap(rectifiedLeft, rightImage, disparityMap, quality)) {
+        if (!computeDisparityMap(rectifiedLeft, rectifiedRight, disparityMap, quality)) {
             std::cerr << "Failed to compute disparity map" << std::endl;
             return false;
         }
