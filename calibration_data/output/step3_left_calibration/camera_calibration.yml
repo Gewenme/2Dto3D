@@ -16,4 +16,4 @@ distortion_coefficients: !!opencv-matrix
 image_width: 3264
 image_height: 2448
 reprojection_error: 2.4454585984280358e-01
-calibration_time: "Sun Aug 31 01:54:24 2025\n"
+calibration_time: "Sun Aug 31 02:04:43 2025\n"

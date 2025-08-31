@@ -12,27 +12,27 @@ This is a complete camera calibration and 3D reconstruction pipeline implementat
 ### 第1步：图像预处理 (Step 1: Image Preprocessing)
 - **目标**: 将左右标定图组图片裁剪为3264×2448像素
 - **功能**: 统一图像尺寸，为后续处理做准备
-- **执行**: `./bin/step1_image_preprocessing` 或使用完整流程
+- **模块**: 使用 `image_resize.h/.cpp` 现有模块
 
 ### 第2步：角点检测 (Step 2: Corner Detection)  
 - **目标**: 检测棋盘格角点并可视化
 - **功能**: 检测9×6内角点，生成角点标记图像和坐标数据
-- **执行**: `./bin/step2_corner_detection` 或使用完整流程
+- **模块**: 使用 `corner_detection.h/.cpp` 现有模块
 
 ### 第3步：单目标定 (Step 3: Monocular Calibration)
 - **目标**: 对左右相机分别进行单目标定  
 - **功能**: 计算相机内参、畸变系数，生成矫正图和残差图
-- **执行**: `./bin/step3_monocular_calibration` 或使用完整流程
+- **模块**: 使用 `mono_calibration.h/.cpp` 现有模块
 
 ### 第4步：立体校正 (Step 4: Stereo Rectification)
 - **目标**: 双目标定和立体校正
 - **功能**: 计算双目几何关系，生成立体校正参数
-- **执行**: `./bin/step4_stereo_rectification` 或使用完整流程
+- **模块**: 使用 `stereo_calibration.h/.cpp` 现有模块
 
 ### 第5步：三维重建 (Step 5: 3D Reconstruction)
 - **目标**: 基于立体匹配的3D点云重建
 - **功能**: 立体匹配，生成深度图和3D点云模型
-- **执行**: `./bin/step5_3d_reconstruction` 或使用完整流程
+- **模块**: 使用 `stereo_reconstruction.h/.cpp` 现有模块
 
 ## 关键配置 (Key Configuration)
 
@@ -45,6 +45,8 @@ This is a complete camera calibration and 3D reconstruction pipeline implementat
 ## 使用方法 (Usage)
 
 ### 方法1：完整流程执行 (Method 1: Complete Pipeline Execution)
+使用现有模块的集成方式 (Using integrated approach with existing modules)
+
 ```bash
 # 构建项目
 mkdir build && cd build
@@ -57,29 +59,27 @@ mkdir -p calibration_data/input/right
 # 将棋盘格标定图像放入 left/ 和 right/ 文件夹
 # 将场景图像命名为 scene_left.jpg 和 scene_right.jpg
 
-# 运行完整流程
+# 运行完整流程 (运行所有5个步骤)
 ./bin/2Dto3D
 # 或者运行演示版本
 ./bin/demo_8_2mm
 ```
 
-### 方法2：分步执行 (Method 2: Step-by-Step Execution)
-```bash
-# 第1步：图像预处理
-./bin/step1_image_preprocessing
+所有步骤将按顺序自动执行，使用仓库中现有的模块化代码。
+All steps will execute automatically in sequence using the existing modular code in the repository.
 
-# 第2步：角点检测
-./bin/step2_corner_detection
+### 方法2：使用现有模块化代码 (Method 2: Using Existing Modular Code)
+该实现直接使用仓库中现有的模块化代码，通过主程序调用：
+This implementation uses the existing modular code in the repository through the main program:
 
-# 第3步：单目标定
-./bin/step3_monocular_calibration
+- `image_resize.h/.cpp` - 图像预处理模块
+- `corner_detection.h/.cpp` - 角点检测模块  
+- `mono_calibration.h/.cpp` - 单目标定模块
+- `stereo_calibration.h/.cpp` - 双目标定模块
+- `stereo_reconstruction.h/.cpp` - 3D重建模块
 
-# 第4步：双目标定和立体校正
-./bin/step4_stereo_rectification
-
-# 第5步：3D重建
-./bin/step5_3d_reconstruction
-```
+所有模块通过 `main.cpp` 集成调用，无需单独的步骤可执行文件。
+All modules are integrated through `main.cpp`, no separate step executables needed.
 
 ## 输入数据结构 (Input Data Structure)
 
