@@ -20,10 +20,10 @@ int main() {
     std::filesystem::create_directories("example/input/right");
     std::filesystem::create_directories("example/output");
     
-    // Example configuration
+    // Example configuration - Updated to use 8.2mm squares
     const int boardWidth = 9;
     const int boardHeight = 6;
-    const float squareSize = 0.025f;  // 25mm squares
+    const float squareSize = 0.0082f;  // 8.2mm squares
     const int imageWidth = 640;
     const int imageHeight = 480;
     
@@ -70,14 +70,34 @@ int main() {
                 
                 std::cout << "\n3. Camera Calibration..." << std::endl;
                 
-                // Step 3: Mono calibration (optional, for individual camera parameters)
-                MonoCalibration::calibrateCamera(
+                // Step 3: Mono calibration with undistorted image generation
+                bool leftCalib = MonoCalibration::calibrateCamera(
                     "example/output/left_corners",
                     "example/output/left_resized", 
                     "example/output/left_calibration",
                     boardWidth, boardHeight, squareSize,
-                    imageWidth, imageHeight
+                    imageWidth, imageHeight,
+                    true,  // Save undistorted images
+                    "example/output/left_undistorted"  // Path for undistorted images
                 );
+                
+                bool rightCalib = MonoCalibration::calibrateCamera(
+                    "example/output/right_corners",
+                    "example/output/right_resized", 
+                    "example/output/right_calibration",
+                    boardWidth, boardHeight, squareSize,
+                    imageWidth, imageHeight,
+                    true,  // Save undistorted images
+                    "example/output/right_undistorted"  // Path for undistorted images
+                );
+                
+                if (leftCalib && rightCalib) {
+                    std::cout << "✓ Mono calibration completed for both cameras" << std::endl;
+                    std::cout << "  - Generated undistorted (corrected) images" << std::endl;
+                    std::cout << "  - Generated residual error visualization images" << std::endl;
+                } else {
+                    std::cout << "⚠ Mono calibration had issues, but continuing..." << std::endl;
+                }
                 
                 std::cout << "\n4. Stereo Calibration..." << std::endl;
                 

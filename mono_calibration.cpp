@@ -72,6 +72,13 @@ bool calibrateCamera(const std::string& cornerDataPath,
 
         std::cout << "Calibration data saved to: " << calibFile << std::endl;
 
+        // Generate residual error images
+        std::string residualPath = outputPath + "/residual_images";
+        if (generateResidualImages(cornerDataPath, imageFolderPath, residualPath,
+                                  cameraMatrix, distCoeffs, objectPoints, imagePoints, rvecs, tvecs)) {
+            std::cout << "Residual error images saved to: " << residualPath << std::endl;
+        }
+
         // Save undistorted images if requested
         if (saveUndistorted && !undistortedPath.empty()) {
             int undistortedCount = 0;
@@ -172,6 +179,141 @@ bool undistortImage(const cv::Mat& inputImage,
 
     } catch (const std::exception& e) {
         std::cerr << "Error undistorting image: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool generateResidualImages(const std::string& cornerDataPath,
+                           const std::string& imageFolderPath,
+                           const std::string& outputPath,
+                           const cv::Mat& cameraMatrix,
+                           const cv::Mat& distCoeffs,
+                           const std::vector<std::vector<cv::Point3f>>& objectPoints,
+                           const std::vector<std::vector<cv::Point2f>>& imagePoints,
+                           const std::vector<cv::Mat>& rvecs,
+                           const std::vector<cv::Mat>& tvecs) {
+    try {
+        // Create output directory
+        std::filesystem::create_directories(outputPath);
+        
+        if (objectPoints.size() != imagePoints.size() || 
+            objectPoints.size() != rvecs.size() || 
+            objectPoints.size() != tvecs.size()) {
+            std::cerr << "Mismatch in calibration data sizes" << std::endl;
+            return false;
+        }
+
+        int residualCount = 0;
+        double totalError = 0.0;
+
+        // Process each calibration image
+        for (size_t imgIdx = 0; imgIdx < objectPoints.size(); imgIdx++) {
+            // Project 3D points to 2D using calibration parameters
+            std::vector<cv::Point2f> projectedPoints;
+            cv::projectPoints(objectPoints[imgIdx], rvecs[imgIdx], tvecs[imgIdx],
+                            cameraMatrix, distCoeffs, projectedPoints);
+
+            // Calculate reprojection errors for this image
+            std::vector<float> errors;
+            float maxError = 0.0f;
+            for (size_t ptIdx = 0; ptIdx < imagePoints[imgIdx].size(); ptIdx++) {
+                cv::Point2f diff = imagePoints[imgIdx][ptIdx] - projectedPoints[ptIdx];
+                float error = sqrt(diff.x * diff.x + diff.y * diff.y);
+                errors.push_back(error);
+                maxError = std::max(maxError, error);
+                totalError += error;
+            }
+
+            // Load corresponding original image
+            std::string imageName = "img_" + std::to_string(imgIdx) + ".jpg";
+            std::string imagePath;
+            
+            // Try to find the corresponding image file
+            for (const auto& entry : std::filesystem::directory_iterator(imageFolderPath)) {
+                if (entry.is_regular_file()) {
+                    std::string filename = entry.path().filename().string();
+                    if (filename.find(std::to_string(imgIdx)) != std::string::npos ||
+                        imgIdx == 0) { // Use first available image as fallback
+                        imagePath = entry.path().string();
+                        break;
+                    }
+                }
+            }
+
+            if (imagePath.empty()) {
+                // Fallback: use first available image
+                for (const auto& entry : std::filesystem::directory_iterator(imageFolderPath)) {
+                    if (entry.is_regular_file()) {
+                        std::string ext = entry.path().extension().string();
+                        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp") {
+                            imagePath = entry.path().string();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (imagePath.empty()) {
+                std::cerr << "No image found for index " << imgIdx << std::endl;
+                continue;
+            }
+
+            cv::Mat image = cv::imread(imagePath);
+            if (image.empty()) {
+                std::cerr << "Failed to load image: " << imagePath << std::endl;
+                continue;
+            }
+
+            // Create residual error visualization
+            cv::Mat errorVis = image.clone();
+
+            // Draw detected corners in green
+            for (size_t ptIdx = 0; ptIdx < imagePoints[imgIdx].size(); ptIdx++) {
+                cv::circle(errorVis, imagePoints[imgIdx][ptIdx], 3, cv::Scalar(0, 255, 0), -1);
+            }
+
+            // Draw projected corners in red
+            for (size_t ptIdx = 0; ptIdx < projectedPoints.size(); ptIdx++) {
+                cv::circle(errorVis, projectedPoints[ptIdx], 3, cv::Scalar(0, 0, 255), -1);
+            }
+
+            // Draw error vectors
+            for (size_t ptIdx = 0; ptIdx < imagePoints[imgIdx].size(); ptIdx++) {
+                cv::line(errorVis, imagePoints[imgIdx][ptIdx], projectedPoints[ptIdx], 
+                        cv::Scalar(255, 0, 255), 1);
+                
+                // Color code the error magnitude
+                float normalizedError = errors[ptIdx] / maxError;
+                cv::Scalar errorColor(0, 255 * (1 - normalizedError), 255 * normalizedError);
+                cv::circle(errorVis, imagePoints[imgIdx][ptIdx], 5, errorColor, 2);
+            }
+
+            // Add text information
+            cv::putText(errorVis, "Green: Detected, Red: Projected", 
+                       cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 2);
+            
+            float avgError = 0;
+            for (float err : errors) avgError += err;
+            avgError /= errors.size();
+            
+            std::string errorText = "Avg Error: " + std::to_string(avgError) + " px";
+            cv::putText(errorVis, errorText, cv::Point(10, 60), 
+                       cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 255, 255), 2);
+
+            // Save residual image
+            std::string outputFile = outputPath + "/residual_" + std::to_string(imgIdx) + ".jpg";
+            cv::imwrite(outputFile, errorVis);
+            residualCount++;
+        }
+
+        std::cout << "Generated " << residualCount << " residual error images" << std::endl;
+        std::cout << "Average reprojection error: " << (totalError / (objectPoints.size() * objectPoints[0].size())) << " pixels" << std::endl;
+
+        return residualCount > 0;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error generating residual images: " << e.what() << std::endl;
         return false;
     }
 }
